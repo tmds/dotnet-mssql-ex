@@ -1,0 +1,150 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "mssql",
+        "annotations": {
+            "openshift.io/display-name": "Microsoft SQL Server",
+            "description": "Relational database management system developed by Microsoft."
+        }
+    },
+    "objects": [
+        {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME}",
+                "annotations": {
+                    "description": "Exposes the server"
+                }
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "name": "tcp",
+                        "port": 1433,
+                        "targetPort": 1433
+                    }
+                ],
+                "selector": {
+                    "name": "${NAME}"
+                }
+            }
+        },
+        {
+            "kind": "DeploymentConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME}",
+                "annotations": {
+                    "description": "Defines how to deploy the database server"
+                }
+            },
+            "spec": {
+                "strategy": {
+                    "type": "Rolling"
+                },
+                "triggers": [
+                    {
+                        "type": "ImageChange",
+                        "imageChangeParams": {
+                            "automatic": true,
+                            "containerNames": [
+                                "db"
+                            ],
+                            "from": {
+                                "kind": "ImageStreamTag",
+                                "name": "${MSSQL_IMAGE_TAG}",
+                                "namespace": "${MSSQL_IMAGE_NAMESPACE}"
+                            }
+                        }
+                    },
+                    {
+                        "type": "ConfigChange"
+                    }
+                ],
+                "replicas": 1,
+                "selector": {
+                    "name": "${NAME}"
+                },
+                "template": {
+                    "metadata": {
+                        "name": "${NAME}",
+                        "labels": {
+                            "name": "${NAME}"
+                        }
+                    },
+                    "spec": {
+                        "containers": [
+                            {
+                                "name": "db",
+                                "image": " ",
+                                "ports": [
+                                    {
+                                        "containerPort": 1433
+                                    }
+                                ],
+                                "resources": {
+                                    "limits": {
+                                        "memory": "${MEMORY_LIMIT}"
+                                    }
+                                },
+                                "env": [
+                                    {
+                                        "name": "ACCEPT_EULA",
+                                        "value": "${ACCEPT_EULA}"
+                                    },
+                                    {
+                                        "name": "MSSQL_SA_PASSWORD",
+                                        "value": "${MSSQL_SA_PASSWORD}"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    ],
+    "parameters": [
+        {
+            "name": "NAME",
+            "displayName": "Name",
+            "description": "The name assigned to all of the frontend objects defined in this template.",
+            "required": true,
+            "value": "mssql"
+        },
+        {
+            "name": "MEMORY_LIMIT",
+            "displayName": "Memory Limit",
+            "description": "Maximum amount of memory the container can use.",
+            "required": true,
+            "value": "256Mi"
+        },
+        {
+            "name": "MSSQL_IMAGE_TAG",
+            "displayName": "Microsoft SQL Server image",
+            "required": true,
+            "description": "The image stream tag which is used to build the code.",
+            "value": "mssql:2017"
+        },
+        {
+            "name": "MSSQL_IMAGE_NAMESPACE",
+            "displayName": "Namespace",
+            "description": "The OpenShift namespace where the SQL Server image resides.",
+            "required": true,
+            "value": "openshift"
+        },
+        {
+            "name": "MSSQL_SA_PASSWORD",
+            "displayName": "Administrator Password",
+            "generate": "expression",
+            "from": "[a-zA-Z0-9]{8}"
+        },
+        {
+            "name": "ACCEPT_EULA",
+            "displayName": "Accept the End-User Licensing Agreement (https://go.microsoft.com/fwlink/?linkid=857698), 'Y' to accept",
+            "required": true
+        }
+    ]
+}
