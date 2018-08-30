@@ -10,6 +10,16 @@
     },
     "objects": [
         {
+            "kind": "Secret",
+            "apiVersion": "v1",
+            "data": {
+                "MSSQL_SA_PASSWORD": "${MSSQL_SA_PASSWORD}"
+            },
+            "metadata": {
+                "name": "${NAME}-secret"
+            }
+        },
+        {
             "kind": "Service",
             "apiVersion": "v1",
             "metadata": {
@@ -96,7 +106,12 @@
                                     },
                                     {
                                         "name": "MSSQL_SA_PASSWORD",
-                                        "value": "${MSSQL_SA_PASSWORD}"
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "name": "${NAME}-secret",
+                                                "key": "MSSQL_SA_PASSWORD"
+                                            }
+                                        }
                                     }
                                 ]
                             }
