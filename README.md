@@ -21,7 +21,7 @@ $ oc create -f https://raw.githubusercontent.com/tmds/dotnet-mssql-ex/master/ope
 Using the template:
 
 ```
-$ oc new-app --template=mssql -p NAME=mssql1 -p ACCEPT_EULA=y -p NAMESPACE=`oc project -q`
+$ oc new-app --template=mssql -p NAME=mssql1 -p ACCEPT_EULA=Y -p NAMESPACE=`oc project -q`
 ```
 
 To see all parameters of the template, you can use `oc process --parameters mssql`.
