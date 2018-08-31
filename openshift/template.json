@@ -171,7 +171,7 @@
             "name": "IMAGE",
             "displayName": "Microsoft SQL Server image",
             "required": true,
-            "description": "The image stream tag which is used to build the code.",
+            "description": "The SQL Server image tag.",
             "value": "mssql:2017"
         },
         {

@@ -23,3 +23,17 @@ Using the template:
 ```
 $ oc new-app --template=mssql -p NAME=mssql1 -p ACCEPT_EULA=y -p NAMESPACE=`oc project -q`
 ```
+
+To see all parameters of the template, you can use `oc process --parameters mssql`.
+
+```
+$ oc process --parameters mssql
+NAME                DESCRIPTION                                                                  GENERATOR           VALUE
+NAME                The name assigned to all of the frontend objects defined in this template.                       mssql
+MEMORY_LIMIT        Maximum amount of memory the container can use.                                                  512Mi
+IMAGE               The SQL Server image tag.                                                                        mssql:2017
+NAMESPACE           The OpenShift namespace where the SQL Server image resides.                                      openshift
+MSSQL_SA_PASSWORD                                                                                expression          [a-zA-Z0-9]{8}
+ACCEPT_EULA         'Y' to accept the EULA (https://go.microsoft.com/fwlink/?linkid=857698).                         
+VOLUME_CAPACITY     Volume space available for data, e.g. 512Mi, 2Gi                                                 512Mi
+```
