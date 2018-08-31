@@ -12,7 +12,7 @@
         {
             "kind": "Secret",
             "apiVersion": "v1",
-            "data": {
+            "stringData": {
                 "MSSQL_SA_PASSWORD": "${MSSQL_SA_PASSWORD}"
             },
             "metadata": {
@@ -64,8 +64,8 @@
                             ],
                             "from": {
                                 "kind": "ImageStreamTag",
-                                "name": "${MSSQL_IMAGE_TAG}",
-                                "namespace": "${MSSQL_IMAGE_NAMESPACE}"
+                                "name": "${IMAGE}",
+                                "namespace": "${NAMESPACE}"
                             }
                         }
                     },
@@ -99,6 +99,12 @@
                                         "memory": "${MEMORY_LIMIT}"
                                     }
                                 },
+                                "volumeMounts": [
+                                    {
+                                        "mountPath": "/var/opt/mssql",
+                                        "name": "mssql-data"
+                                    }
+                                ],
                                 "env": [
                                     {
                                         "name": "ACCEPT_EULA",
@@ -115,7 +121,32 @@
                                     }
                                 ]
                             }
+                        ],
+                        "volumes": [
+                            {
+                                "name": "mssql-data",
+                                "persistentVolumeClaim": {
+                                    "claimName": "${NAME}-pvc"
+                                }
+                            }
                         ]
+                    }
+                }
+            }
+        },
+        {
+            "kind": "PersistentVolumeClaim",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME}-pvc"
+            },
+            "spec": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "resources": {
+                    "requests": {
+                        "storage": "${VOLUME_CAPACITY}"
                     }
                 }
             }
@@ -134,17 +165,17 @@
             "displayName": "Memory Limit",
             "description": "Maximum amount of memory the container can use.",
             "required": true,
-            "value": "256Mi"
+            "value": "512Mi"
         },
         {
-            "name": "MSSQL_IMAGE_TAG",
+            "name": "IMAGE",
             "displayName": "Microsoft SQL Server image",
             "required": true,
             "description": "The image stream tag which is used to build the code.",
             "value": "mssql:2017"
         },
         {
-            "name": "MSSQL_IMAGE_NAMESPACE",
+            "name": "NAMESPACE",
             "displayName": "Namespace",
             "description": "The OpenShift namespace where the SQL Server image resides.",
             "required": true,
@@ -158,7 +189,15 @@
         },
         {
             "name": "ACCEPT_EULA",
-            "displayName": "Accept the End-User Licensing Agreement (https://go.microsoft.com/fwlink/?linkid=857698), 'Y' to accept",
+            "displayName": "Accept the End-User Licensing Agreement",
+            "description": "'Y' to accept the EULA (https://go.microsoft.com/fwlink/?linkid=857698).",
+            "required": true
+        },
+        {
+            "name": "VOLUME_CAPACITY",
+            "displayName": "Persistent Volume Capacity",
+            "description": "Volume space available for data, e.g. 512Mi, 2Gi",
+            "value": "512Mi",
             "required": true
         }
     ]
