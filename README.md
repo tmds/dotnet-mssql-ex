@@ -37,3 +37,93 @@ MSSQL_SA_PASSWORD                                                               
 ACCEPT_EULA         'Y' to accept the EULA (https://go.microsoft.com/fwlink/?linkid=857698).                         
 VOLUME_CAPACITY     Volume space available for data, e.g. 512Mi, 2Gi                                                 512Mi
 ```
+
+## Using the server from .NET Core
+
+The following code shows how to use the SQL server from ASP.NET Core.
+The `DB_PROVIDER` variable is used to switch between SQL server and InMemory.
+The `MSSQL_SERVER`, `MSSQL_SA_PASSWORD` variables are used to build the connection string.
+
+```cs
+        enum DbProvider
+        {
+            Mssql,
+            Memory
+        }
+
+        public void ConfigureServices(IServiceCollection services)
+        {
+            DbProvider? dbProvider = Configuration.GetValue<DbProvider?>("DB_PROVIDER");
+
+            if (dbProvider == null && !IsOpenShift)
+            {
+                dbProvider = DbProvider.Memory;
+            }
+
+            switch (dbProvider)
+            {
+                case DbProvider.Mssql:
+                    string server = Configuration["MSSQL_SERVER"] ?? "localhost";
+                    string password = Configuration["MSSQL_SA_PASSWORD"];
+                    string user = "sa";
+                    string dbName = "myContacts";
+                    string connectionString = $@"Server={server};Database={dbName};User Id={user};Password={password};";
+
+                    Logger.LogInformation($"Using SQL Server: {server}");
+                    services.AddDbContext<AppDbContext>(options =>
+                                options.UseSqlServer(connectionString));
+                    break;
+                case DbProvider.Memory:
+                    Logger.LogInformation("Using InMemory database");
+                    services.AddDbContext<AppDbContext>(options =>
+                              options.UseInMemoryDatabase("name"));
+                    break;
+                default:
+                    throw new Exception($"Unknown db provider: {dbProvider}");
+            }
+
+            services.AddMvc();
+        }
+
+        private static bool IsOpenShift => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OPENSHIFT_BUILD_NAME"));
+```
+
+Database creation and migrations are triggered from `Configure`:
+
+```cs
+        public void Configure(IApplicationBuilder app)
+        {
+            UpdateDatabase(app);
+
+            app.UseMvc();
+        }
+
+        private static void UpdateDatabase(IApplicationBuilder app)
+        {
+            using (var serviceScope = app.ApplicationServices
+                .GetRequiredService<IServiceScopeFactory>()
+                .CreateScope())
+            {
+                using (var context = serviceScope.ServiceProvider.GetService<AppDbContext>())
+                {
+                    context.Database.Migrate();
+                }
+            }
+        }
+```
+
+Migrations can be created using the `dotnet ef migrations` command. For example `dotnet ef migrations add Initial` is used to create the initial migration.
+
+A sample application can be deployed using the following template:
+
+```
+$ oc create -f https://raw.githubusercontent.com/tmds/dotnet-mssql-ex/master/openshift/template.json
+```
+
+You can instantiate the template as follows:
+
+```sh
+$ oc new-app --template=mssql -p NAME=dotnet-mssql -p MSSQL_SERVER=mssql1 -p MSSQL_SECRET_NAME=mssql1-secret # -p NAMESPACE=`oc project -q`
+```
+
+Add the `NAMESPACE` parameter when the .NET Core imagestreams are installed in the current project.

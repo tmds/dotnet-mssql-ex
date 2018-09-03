@@ -55,7 +55,7 @@ namespace RazorPagesContacts
                               options.UseInMemoryDatabase("name"));
                     break;
                 default:
-                    throw new Exception("Unknown db provider: {dbProvider}");
+                    throw new Exception($"Unknown db provider: {dbProvider}");
             }
 
             services.AddMvc();
