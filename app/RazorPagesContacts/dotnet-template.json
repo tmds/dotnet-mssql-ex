@@ -1,0 +1,284 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "dotnet-mssql-example",
+        "annotations": {
+            "openshift.io/display-name": ".NET using Microsoft SQL Server Example",
+            "description": "An example .NET Core application.",
+            "tags": "quickstart,dotnet,.net",
+            "iconClass": "icon-dotnet"
+        }
+    },
+    "objects": [
+        {
+            "kind": "Route",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME}"
+            },
+            "spec": {
+                "host": "${APPLICATION_DOMAIN}",
+                "to": {
+                    "kind": "Service",
+                    "name": "${NAME}"
+                }
+            }
+        },
+        {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME}",
+                "annotations": {
+                    "description": "Exposes and load balances the application pods"
+                }
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "name": "web",
+                        "port": 8080,
+                        "targetPort": 8080
+                    }
+                ],
+                "selector": {
+                    "name": "${NAME}"
+                }
+            }
+        },
+        {
+            "kind": "ImageStream",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME}",
+                "annotations": {
+                    "description": "Keeps track of changes in the application image"
+                }
+            }
+        },
+        {
+            "kind": "BuildConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME}",
+                "annotations": {
+                    "description": "Defines how to build the application"
+                }
+            },
+            "spec": {
+                "source": {
+                    "type": "Git",
+                    "git": {
+                        "uri": "${SOURCE_REPOSITORY_URL}",
+                        "ref": "${SOURCE_REPOSITORY_REF}"
+                    },
+                    "contextDir": "${CONTEXT_DIR}"
+                },
+                "strategy": {
+                    "type": "Source",
+                    "sourceStrategy": {
+                        "from": {
+                            "kind": "ImageStreamTag",
+                            "namespace": "${NAMESPACE}",
+                            "name": "${DOTNET_IMAGE_STREAM_TAG}"
+                        },
+                        "env": [
+                            {
+                                "name": "DOTNET_STARTUP_PROJECT",
+                                "value": "${DOTNET_STARTUP_PROJECT}"
+                            },
+                            {
+                                "name": "DB_PROVIDER",
+                                "value": "mssql"
+                            },
+                            {
+                                "name": "MSSQL_SERVER",
+                                "value": "${MSSQL_SERVER}"
+                            },
+                            {
+                                "name": "MSSQL_SA_PASSWORD",
+                                "valueFrom": {
+                                    "secretKeyRef": {
+                                        "key": "MSSQL_SA_PASSWORD",
+                                        "name": "${MSSQL_SECRET_NAME}"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                "output": {
+                    "to": {
+                        "kind": "ImageStreamTag",
+                        "name": "${NAME}:latest"
+                    }
+                },
+                "triggers": [
+                    {
+                        "type": "ImageChange"
+                    },
+                    {
+                        "type": "ConfigChange"
+                    }
+                ]
+            }
+        },
+        {
+            "kind": "DeploymentConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME}",
+                "annotations": {
+                    "description": "Defines how to deploy the application server"
+                }
+            },
+            "spec": {
+                "strategy": {
+                    "type": "Rolling"
+                },
+                "triggers": [
+                    {
+                        "type": "ImageChange",
+                        "imageChangeParams": {
+                            "automatic": true,
+                            "containerNames": [
+                                "dotnet-app"
+                            ],
+                            "from": {
+                                "kind": "ImageStreamTag",
+                                "name": "${NAME}:latest"
+                            }
+                        }
+                    },
+                    {
+                        "type": "ConfigChange"
+                    }
+                ],
+                "replicas": 1,
+                "selector": {
+                    "name": "${NAME}"
+                },
+                "template": {
+                    "metadata": {
+                        "name": "${NAME}",
+                        "labels": {
+                            "name": "${NAME}"
+                        }
+                    },
+                    "spec": {
+                        "containers": [
+                            {
+                                "name": "dotnet-app",
+                                "image": " ",
+                                "ports": [
+                                    {
+                                        "containerPort": 8080
+                                    }
+                                ],
+                                "livenessProbe": {
+                                    "httpGet": {
+                                        "path": "/",
+                                        "port": 8080,
+                                        "scheme": "HTTP"
+                                    },
+                                    "initialDelaySeconds": 40,
+                                    "timeoutSeconds": 15
+                                },
+                                "readinessProbe": {
+                                    "httpGet": {
+                                        "path": "/",
+                                        "port": 8080,
+                                        "scheme": "HTTP"
+                                    },
+                                    "initialDelaySeconds": 10,
+                                    "timeoutSeconds": 30
+                                },
+                                "resources": {
+                                    "limits": {
+                                        "memory": "${MEMORY_LIMIT}"
+                                    }
+                                },
+                                "env": []
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    ],
+    "parameters": [
+        {
+            "name": "NAME",
+            "displayName": "Name",
+            "description": "The name assigned to all of the frontend objects defined in this template.",
+            "required": true,
+            "value": "dotnet-mssql-example"
+        },
+        {
+            "name": "SQL_SERVER",
+            "displayName": "Microsoft SQL Server hostname",
+            "description": "The hostname of the database server.",
+            "required": true,
+            "value": "mssql"
+        },
+        {
+            "name": "MSSQL_SECRET_NAME",
+            "displayName": "Name of Secret containing administrator password",
+            "description": "Secret containing MSSQL_SA_PASSWORD.",
+            "required": true,
+            "value": "mssql-secret"
+        },
+        {
+            "name": "CONTEXT_DIR",
+            "displayName": "Context Directory",
+            "description": "Set this to use a subdirectory of the source code repository"
+        },
+        {
+            "name": "APPLICATION_DOMAIN",
+            "displayName": "Application Hostname",
+            "description": "The exposed hostname that will route to the .NET Core service, if left blank a value will be defaulted.",
+            "value": ""
+        },
+        {
+            "name": "MEMORY_LIMIT",
+            "displayName": "Memory Limit",
+            "description": "Maximum amount of memory the container can use.",
+            "required": true,
+            "value": "128Mi"
+        },
+        {
+            "name": "DOTNET_IMAGE_STREAM_TAG",
+            "displayName": ".NET builder",
+            "required": true,
+            "description": "The image stream tag which is used to build the code.",
+            "value": "dotnet:2.1"
+        },
+        {
+            "name": "NAMESPACE",
+            "displayName": "Namespace",
+            "description": "The OpenShift Namespace where the ImageStream resides.",
+            "required": true,
+            "value": "openshift"
+        },
+        {
+            "name": "SOURCE_REPOSITORY_URL",
+            "displayName": "Git Repository URL",
+            "description": "The URL of the repository with your application source code.",
+            "required": true,
+            "value": "https://github.com/tmds/dotnet-mssql-ex.git"
+        },
+        {
+            "name": "SOURCE_REPOSITORY_REF",
+            "displayName": "Git Reference",
+            "description": "Set this to a branch name, tag or other ref of your repository if you are not using the default branch.",
+            "value": "master"
+        },
+        {
+            "name": "DOTNET_STARTUP_PROJECT",
+            "displayName": "Startup Project",
+            "description": "Set this to a project file (e.g. csproj) or a folder containing a single project file.",
+            "value": "app/RazorPagesContacts"
+        }
+    ]
+}
