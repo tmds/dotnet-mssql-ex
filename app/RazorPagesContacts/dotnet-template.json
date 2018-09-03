@@ -87,23 +87,6 @@
                             {
                                 "name": "DOTNET_STARTUP_PROJECT",
                                 "value": "${DOTNET_STARTUP_PROJECT}"
-                            },
-                            {
-                                "name": "DB_PROVIDER",
-                                "value": "mssql"
-                            },
-                            {
-                                "name": "MSSQL_SERVER",
-                                "value": "${MSSQL_SERVER}"
-                            },
-                            {
-                                "name": "MSSQL_SA_PASSWORD",
-                                "valueFrom": {
-                                    "secretKeyRef": {
-                                        "key": "MSSQL_SA_PASSWORD",
-                                        "name": "${MSSQL_SECRET_NAME}"
-                                    }
-                                }
                             }
                         ]
                     }
@@ -199,7 +182,25 @@
                                         "memory": "${MEMORY_LIMIT}"
                                     }
                                 },
-                                "env": []
+                                "env": [
+                                    {
+                                        "name": "DB_PROVIDER",
+                                        "value": "mssql"
+                                    },
+                                    {
+                                        "name": "MSSQL_SERVER",
+                                        "value": "${MSSQL_SERVER}"
+                                    },
+                                    {
+                                        "name": "MSSQL_SA_PASSWORD",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "key": "MSSQL_SA_PASSWORD",
+                                                "name": "${MSSQL_SECRET_NAME}"
+                                            }
+                                        }
+                                    }
+                                ]
                             }
                         ]
                     }
@@ -216,7 +217,7 @@
             "value": "dotnet-mssql-example"
         },
         {
-            "name": "SQL_SERVER",
+            "name": "MSSQL_SERVER",
             "displayName": "Microsoft SQL Server hostname",
             "description": "The hostname of the database server.",
             "required": true,
@@ -228,38 +229,6 @@
             "description": "Secret containing MSSQL_SA_PASSWORD.",
             "required": true,
             "value": "mssql-secret"
-        },
-        {
-            "name": "CONTEXT_DIR",
-            "displayName": "Context Directory",
-            "description": "Set this to use a subdirectory of the source code repository"
-        },
-        {
-            "name": "APPLICATION_DOMAIN",
-            "displayName": "Application Hostname",
-            "description": "The exposed hostname that will route to the .NET Core service, if left blank a value will be defaulted.",
-            "value": ""
-        },
-        {
-            "name": "MEMORY_LIMIT",
-            "displayName": "Memory Limit",
-            "description": "Maximum amount of memory the container can use.",
-            "required": true,
-            "value": "128Mi"
-        },
-        {
-            "name": "DOTNET_IMAGE_STREAM_TAG",
-            "displayName": ".NET builder",
-            "required": true,
-            "description": "The image stream tag which is used to build the code.",
-            "value": "dotnet:2.1"
-        },
-        {
-            "name": "NAMESPACE",
-            "displayName": "Namespace",
-            "description": "The OpenShift Namespace where the ImageStream resides.",
-            "required": true,
-            "value": "openshift"
         },
         {
             "name": "SOURCE_REPOSITORY_URL",
@@ -279,6 +248,38 @@
             "displayName": "Startup Project",
             "description": "Set this to a project file (e.g. csproj) or a folder containing a single project file.",
             "value": "app/RazorPagesContacts"
+        },
+        {
+            "name": "DOTNET_IMAGE_STREAM_TAG",
+            "displayName": ".NET builder",
+            "required": true,
+            "description": "The image stream tag which is used to build the code.",
+            "value": "dotnet:2.1"
+        },
+        {
+            "name": "NAMESPACE",
+            "displayName": "Namespace",
+            "description": "The OpenShift Namespace where the ImageStream resides.",
+            "required": true,
+            "value": "openshift"
+        },
+        {
+            "name": "CONTEXT_DIR",
+            "displayName": "Context Directory",
+            "description": "Set this to use a subdirectory of the source code repository"
+        },
+        {
+            "name": "APPLICATION_DOMAIN",
+            "displayName": "Application Hostname",
+            "description": "The exposed hostname that will route to the .NET Core service, if left blank a value will be defaulted.",
+            "value": ""
+        },
+        {
+            "name": "MEMORY_LIMIT",
+            "displayName": "Memory Limit",
+            "description": "Maximum amount of memory the container can use.",
+            "required": true,
+            "value": "128Mi"
         }
     ]
 }
