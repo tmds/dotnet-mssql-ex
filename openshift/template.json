@@ -185,7 +185,7 @@
             "name": "MSSQL_SA_PASSWORD",
             "displayName": "Administrator Password",
             "generate": "expression",
-            "from": "[a-zA-Z0-9]{8}"
+            "from": "aA1[a-zA-Z0-9]{8}"
         },
         {
             "name": "ACCEPT_EULA",
