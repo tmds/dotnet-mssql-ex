@@ -14,11 +14,11 @@ namespace RazorPagesContacts
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-#if Debug
-                .UseStartup<StartupDebug>()
-#else
+// #if Debug
+//                 .UseStartup<StartupDebug>()
+// #else
                 .UseStartup<Startup>()
-#endif
+// #endif
                 .Build();
     }
 }
