@@ -127,3 +127,50 @@ $ oc new-app --template=mssql -p NAME=dotnet-mssql -p MSSQL_SERVER=mssql1 -p MSS
 ```
 
 Add the `NAMESPACE` parameter when the .NET Core imagestreams are installed in the current project.
+
+## Accessing the SQL Server locally
+
+To connect to a SQL Server on OpenShift we must expose the database port on the local machine.
+
+First, find the name of the SQL Server pod:
+
+```
+$ oc get pod
+NAME                           READY     STATUS      RESTARTS   AGE
+dotnet-mssql-example-1-build   0/1       Completed   0          2h
+dotnet-mssql-example-1-zlscm   1/1       Running     0          2h
+mssql-1-fhvh9                  1/1       Running     0          2h
+mssql2017-1-build              0/1       Completed   0          2h
+```
+
+Now, we forward connections to localhost:1433 to the pod:
+```
+$ oc port-forward mssql-1-fhvh9 1433
+```
+
+We can retrieve the administrator password from the secret and Base64 decoding it:
+
+```
+$ oc get secret mssql1-secret -o yaml | grep MSSQL_SQ_PASSWORD
+    MSSQL_SA_PASSWORD: YUExSnBZcEk3djM=
+$ echo YUExSnBZcEk3djM= | base64 -d
+aA1JpYpI7v3
+```
+
+### SQL Operations Studio
+
+SQL Operations Studio is an open-source cross-platform tool from Microsoft for managing SQL servers.
+Installation instructions are available at: https://docs.microsoft.com/en-us/sql/sql-operations-studio/download?view=sql-server-2017
+
+After following the previous instructions, you can connect to the SQL server via `localhost` with username `sa` and the password stored in the secret.
+
+### local .NET Core application
+
+After following the previous instructions, we can setup the environment variables so our local .NET Core application connects to the SQL server running on Openshift.
+
+```
+$ export DB_PROVIDER=mssql
+$ export MSSQL_SERVER=localhost
+$ export MSSQL_SA_PASSWORD=(sa password)
+$ dotnet run
+```
