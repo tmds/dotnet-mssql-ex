@@ -56,9 +56,11 @@ DOCKERFILE=$(cat Dockerfile)
 DOCKERFILE=$(echo $DOCKERFILE | sed '/^#/ d')
 # trim empty lines
 DOCKERFILE=$(echo $DOCKERFILE | sed '/^\s*$/d')
+# escape \
+DOCKERFILE=$(echo $DOCKERFILE | sed 's/\\/\\\\/g')
 # escape "
 DOCKERFILE=$(echo $DOCKERFILE | sed 's/\"/\\"/g')
-# handle line endings
-DOCKERFILE=$(echo $DOCKERFILE| sed 's/\\$/\\\\/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+# escape \n
+DOCKERFILE=$(echo $DOCKERFILE | sed ':a;N;$!ba;s/\n/\\n/g')
 
-echo -n ${HEADER}${DOCKERFILE}${FOOTER}
+echo -n ${HEADER}${DOCKERFILE}${FOOTER} >imagestreams.json

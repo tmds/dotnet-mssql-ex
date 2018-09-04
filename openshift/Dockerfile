@@ -25,8 +25,14 @@ RUN REPOLIST=rhel-7-server-rpms,packages-microsoft-com-mssql-server-2017,package
       mssql-server mssql-tools unixODBC-devel && \
     yum clean all
 
-RUN echo $'#!/bin/sh\\nif ! whoami &> /dev/null; then\\n  if [ -w /etc/passwd ]; then\\n    echo "${USER_NAME:-sqlservr}:x:$(id -u):0:${USER_NAME:-sqlservr} user:${HOME}:/sbin/nologin" >> /etc/passwd\\n  fi\\nfi\\nexec "$@"\\n' \
-    >> /opt/mssql-tools/bin/uid_entrypoint && chmod +x /opt/mssql-tools/bin/uid_entrypoint
+RUN echo $'#!/bin/sh\n\
+if ! whoami &> /dev/null; then\n\
+  if [ -w /etc/passwd ]; then\n\
+    echo "${USER_NAME:-sqlservr}:x:$(id -u):0:${USER_NAME:-sqlservr} user:${HOME}:/sbin/nologin" >> /etc/passwd\n\
+  fi\n\
+fi\n\
+exec "$@"'\
+> /opt/mssql-tools/bin/uid_entrypoint && chmod +x /opt/mssql-tools/bin/uid_entrypoint
 
 ENV PATH=${PATH}:/opt/mssql/bin:/opt/mssql-tools/bin
 RUN mkdir -p /var/opt/mssql/data && \
