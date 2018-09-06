@@ -77,6 +77,7 @@ The `MSSQL_SERVER`, `MSSQL_SA_PASSWORD` variables are used to build the connecti
                     Logger.LogInformation("Using InMemory database");
                     services.AddDbContext<AppDbContext>(options =>
                               options.UseInMemoryDatabase("name"));
+                    _migrateDatabase = false;
                     break;
                 default:
                     throw new Exception($"Unknown db provider: {dbProvider}");
@@ -93,12 +94,15 @@ Database creation and migrations are triggered from `Configure`:
 ```cs
         public void Configure(IApplicationBuilder app)
         {
-            UpdateDatabase(app);
+            if (_migrateDatabase)
+            {
+                MigrateDatabase(app);
+            }
 
             app.UseMvc();
         }
 
-        private static void UpdateDatabase(IApplicationBuilder app)
+        private static void MigrateDatabase(IApplicationBuilder app)
         {
             using (var serviceScope = app.ApplicationServices
                 .GetRequiredService<IServiceScopeFactory>()

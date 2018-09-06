@@ -20,6 +20,7 @@ namespace RazorPagesContacts
         public IHostingEnvironment HostingEnvironment { get; }
         public IConfiguration Configuration { get; }
         public ILogger Logger { get; }
+        private bool _migrateDatabase = true;
 
         public Startup(IConfiguration configuration, ILogger<Startup> logger)
         {
@@ -53,6 +54,7 @@ namespace RazorPagesContacts
                     Logger.LogInformation("Using InMemory database");
                     services.AddDbContext<AppDbContext>(options =>
                               options.UseInMemoryDatabase("name"));
+                    _migrateDatabase = false;
                     break;
                 default:
                     throw new Exception($"Unknown db provider: {dbProvider}");
@@ -63,12 +65,15 @@ namespace RazorPagesContacts
 
         public void Configure(IApplicationBuilder app)
         {
-            UpdateDatabase(app);
+            if (_migrateDatabase)
+            {
+                MigrateDatabase(app);
+            }
 
             app.UseMvc();
         }
 
-        private static void UpdateDatabase(IApplicationBuilder app)
+        private static void MigrateDatabase(IApplicationBuilder app)
         {
             using (var serviceScope = app.ApplicationServices
                 .GetRequiredService<IServiceScopeFactory>()
