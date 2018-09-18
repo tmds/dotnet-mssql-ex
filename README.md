@@ -121,13 +121,13 @@ Migrations can be created using the `dotnet ef migrations` command. For example 
 A sample application can be deployed using the following template:
 
 ```
-$ oc create -f https://raw.githubusercontent.com/tmds/dotnet-mssql-ex/master/openshift/template.json
+$ oc create -f https://raw.githubusercontent.com/tmds/dotnet-mssql-ex/master/app/RazorPagesContacts/dotnet-template.json
 ```
 
 You can instantiate the template as follows:
 
 ```sh
-$ oc new-app --template=mssql -p NAME=dotnet-mssql -p MSSQL_SERVER=mssql1 -p MSSQL_SECRET_NAME=mssql1-secret # -p NAMESPACE=`oc project -q`
+$ oc new-app --template=dotnet-mssql-example -p NAME=dotnet-mssql -p MSSQL_SERVER=mssql1 -p MSSQL_SECRET_NAME=mssql1-secret # -p NAMESPACE=`oc project -q`
 ```
 
 Add the `NAMESPACE` parameter when the .NET Core imagestreams are installed in the current project.
